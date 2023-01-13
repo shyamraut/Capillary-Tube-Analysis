@@ -17,4 +17,6 @@ m: the mass flow rate in kilograms per second
 d: the diameter of the pipe in inches
 The code will then read in data for the refrigerant R410A from a file called R410A.csv and use it to calculate the various properties of the refrigerant as it flows through the pipe. The results of the simulation will be plotted on a graph and the discretized values will be printed to the console.
 
-![All Graphs](https://user-images.githubusercontent.com/38880121/212340531-86f5f7ca-5144-4b6f-8bad-e0178d302287.png)
+![All Graphs](https://user-images.githubusercontent.com/38880121/212341369-9373c049-f9b5-454e-815f-d7b16a5f9d30.png)
+
+
