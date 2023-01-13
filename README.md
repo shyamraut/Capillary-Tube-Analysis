@@ -1,14 +1,12 @@
 This is a Python script that simulates heat transfer through a pipe. It does this by calculating the pressure, velocity, specific volume, specific enthalpy, and viscosity at different temperatures for a given mass flow rate and pipe diameter. which leads to know the capilliary tube length
 
 To use this code, you will need to have the following packages installed:
-
-math
-
-cmath
-pandas
-numpy
-matplotlib
-scipy
+1.math
+2.cmath
+3.pandas
+4.numpy
+5.matplotlib
+6.scipy
 
 To run the code, you will need to provide values for the following variables at the beginning of the script:
 
