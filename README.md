@@ -1,4 +1,4 @@
-This code appears to be a Python script that simulates heat transfer through a pipe. It does this by calculating the pressure, velocity, specific volume, specific enthalpy, and viscosity at different temperatures for a given mass flow rate and pipe diameter.
+This is a Python script that simulates heat transfer through a pipe. It does this by calculating the pressure, velocity, specific volume, specific enthalpy, and viscosity at different temperatures for a given mass flow rate and pipe diameter. which leads to know the capilliary tube length
 
 To use this code, you will need to have the following packages installed:
 
