@@ -1,25 +1,22 @@
 
 ![All Graphs](https://user-images.githubusercontent.com/38880121/212341369-9373c049-f9b5-454e-815f-d7b16a5f9d30.png)
 
-This is a Python script that simulates various thermodynamic property to calculate capilliary tube length by using the csv files which have values of all properties. It does this by calculating the pressure, velocity, specific volume, specific enthalpy, and viscosity at different temperatures for a given mass flow rate and pipe diameter. 
+Capillary Tube Analysis
 
-To use this code, you will need to have the following packages installed:
+This project is a Python script that calculates the length of a capillary tube required to achieve a desired refrigerant flow rate for a given set of operating conditions. The script uses thermodynamic properties of R410A refrigerant to simulate the flow of refrigerant through the capillary tube.
 
-1.math
-2.cmath
-3.pandas
-4.numpy
-5.matplotlib
-6.scipy
+Prerequisites
+The following Python packages are required to run this script:
 
-To run the code, you will need to provide values for the following variables at the beginning of the script:
+numpy
+pandas
+matplotlib
+scipy
 
-Tc: the condensing temperature in degrees Celsius
-Te: the evaporator temperature in degrees Celsius
-m: the mass flow rate in kilograms per second
-d: the diameter of the pipe in inches
-The code will then read in data for the refrigerant R410A from a file called R410A.csv and use it to calculate the various properties of the refrigerant as it flows through the pipe. The results of the simulation will be plotted on a graph and the discretized values will be printed to the console.
+Usage
+To run the script, simply execute the capillary_tube_sizing.py file. The script will prompt the user to enter the required input parameters, such as the condensing and evaporator temperatures, mass flow rate, and capillary tube diameter.
 
+The script will then calculate the length of the capillary tube required to achieve the desired refrigerant flow rate, as well as generate several graphs that show the relationship between capillary tube length and various other parameters, such as temperature, pressure, and Reynolds number.
 
-
-
+Author
+This project was created by [Your Name]. Feel free to contact me at [Your Email] if you have any questions or feedback.
