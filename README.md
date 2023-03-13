@@ -19,4 +19,4 @@ To run the script, simply execute the capillary_tube_sizing.py file. The script 
 The script will then calculate the length of the capillary tube required to achieve the desired refrigerant flow rate, as well as generate several graphs that show the relationship between capillary tube length and various other parameters, such as temperature, pressure, and Reynolds number.
 
 Author
-This project was created by [Your Name]. Feel free to contact me at [Your Email] if you have any questions or feedback.
+This project was created by Shyam. Feel free to contact me at raut_shyam@outlook.com if you have any questions or feedback.
