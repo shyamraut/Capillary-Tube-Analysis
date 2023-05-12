@@ -49,7 +49,7 @@ def EqRoots(a, b, c):
         return (-b / (2 * a))
 
 
-df = pd.read_csv("R410A.csv")  # File for R410A
+df = pd.read_csv("R410A.csv")  # File for R410A location should be in same folder 
 df.set_index('Temp')
 
 prop = df.loc[df["Temp"] == Tc]
