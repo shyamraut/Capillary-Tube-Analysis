@@ -17,14 +17,14 @@ A = 3.14*(D*D)/4  # Area in Mtere Square
 G = m/A
 
 # Created array for each variable quantity to get graph and discretized value
-reynolds = []
-specificVolume = []
-specificEnthalpy = []
-viscosity = []
-pressure = []
-velocity = []
-o = []
-n = []
+reynolds_numbers = []
+specific_volumes = []
+specific_enthalpies = []
+viscosities = []
+pressures = []
+velocities = []
+temperatures = []
+capillary_lengths = []
 
 
 def EqRoots(a, b, c):
@@ -49,7 +49,7 @@ def EqRoots(a, b, c):
         return (-b / (2 * a))
 
 
-df = pd.read_csv("R410A.csv")  # File for R410A location should be in same folder 
+df = pd.read_csv("R410A.csv")  # File for R410A
 df.set_index('Temp')
 
 prop = df.loc[df["Temp"] == Tc]
@@ -66,11 +66,11 @@ Re1 = (V1*D/(u1*v1))
 f1 = 0.25*(math.log((math.e / (3.7*D))+(5.74/(Re1 ** 0.9)))) ** (-2)
 
 for i in range(Tc, Te-1, -1):
-    o.append(i)
+    temperatures.append(i)
 
 
-for j in range(len(o)):
-    prop2 = df.loc[df["Temp"] == o[j]]
+for j in range(len(temperatures)):
+    prop2 = df.loc[df["Temp"] == temperatures[j]]
     arr2 = prop2.values.tolist()
     p2 = 1e6*arr2[0][1]
     hf2 = 1e3*arr2[0][5]
@@ -99,61 +99,61 @@ for j in range(len(o)):
     Vm = (V1+V2)*0.5
     fm = (f1+f2)*0.5
 
-    # print("Vm", Vm, "\n", "fm", fm,)
+    # print("Vm", Vm, "\capillary_lengths", "fm", fm,)
 
     L12 = ((2)*D*((p1-p2)-G*(V2-V1))/(fm*Vm*G))
-    n.append(L12)
-    velocity.append(Vm)
-    pressure.append(p2)
-    reynolds.append(Re2)
-    specificVolume.append(v2)
-    specificEnthalpy.append(h2)
-    viscosity.append(u2)
+    capillary_lengths.append(L12)
+    velocities.append(Vm)
+    pressures.append(p2)
+    reynolds_numbers.append(Re2)
+    specific_volumes.append(v2)
+    specific_enthalpies.append(h2)
+    viscosities.append(u2)
 
 
 # print(o[j])
 
 print(" Lenght of Capillary Tube in meter is ", L12)
 
-# print(n)
+# print(capillary_lengths)
 
-plt.plot(n, o)
+plt.plot(capillary_lengths, temperatures)
 plt.xlabel('Capillary tube length (m)')
 plt.ylabel('temperature (deg C)')
 plt.title('temperature vs Capillary tube length')
 plt.show()
 
-plt.plot(n, velocity)
+plt.plot(capillary_lengths, velocities)
 plt.xlabel('Capillary tube length (m)')
 plt.ylabel('velocity (m/s)')
 plt.title('Velocity vs Capillary tube length')
 plt.show()
 
-plt.plot(n, pressure)
+plt.plot(capillary_lengths, pressures)
 plt.xlabel('Capillary tube length (m)')
 plt.ylabel('pressure')
 plt.title(' pressure vs Capillary tube length')
 plt.show()
 
-plt.plot(n, reynolds)
+plt.plot(capillary_lengths, reynolds_numbers)
 plt.xlabel('Capillary tube length (m)')
 plt.ylabel('Reynolds number')
 plt.title('Reynolds number vs Capillary tube length')
 plt.show()
 
-plt.plot(n, specificVolume)
+plt.plot(capillary_lengths, specific_volumes)
 plt.xlabel('Capillary tube length (m)')
 plt.ylabel('specific volume')
 plt.title('specific volume vs Capillary tube length')
 plt.show()
 
-plt.plot(n, specificEnthalpy)
+plt.plot(capillary_lengths, specific_enthalpies)
 plt.xlabel('Capillary tube length (m)')
 plt.ylabel(' specific enthalpy')
 plt.title('specific enthalpy vs Capillary tube length')
 plt.show()
 
-plt.plot(n, viscosity)
+plt.plot(capillary_lengths, viscosities)
 plt.xlabel('Capillary tube length (m)')
 plt.ylabel('dynamic viscosity in (Pa.s)')
 plt.title('Dynamic viscosity vs Capillary tube length')
