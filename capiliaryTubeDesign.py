@@ -1,160 +1,143 @@
+# Capillary Tube Sizing Script for R410 Refrigerant
+# Description: Calculates required capillary tube length for a given mass flow rate and operating conditions.
+
 import math
-import cmath
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import make_interp_spline
+import os
 
-# Input
+# -------------------------- Input Parameters --------------------------
+Tc = 40  # Condensing temperature (°C)
+Te = 18  # Evaporator temperature (°C)
+m = 0.0256  # Mass flow rate (kg/s)
+d_inch = 0.094  # Diameter in inches
+D = 0.0254 * d_inch  # Diameter in meters
+A = math.pi * (D**2) / 4  # Cross-sectional area in m^2
+G = m / A  # Mass flux
 
-Tc = 40  # Condensing temperature in
-Te = 18  # Evaporator temperature
-m = 0.0256  # Mass Flow rate Kg/s
-d = 0.094  # Diameter in inches
-D = 0.0254*d
-e = (1e-6)*0.032
-A = 3.14*(D*D)/4  # Area in Mtere Square
-G = m/A
+# -------------------------- Data Initialization --------------------------
+tube_lengths, velocity, pressure = [], [], []
+reynolds, specific_volume, specific_enthalpy = [], [], []
+viscosity, temps = [], []
 
-# Created array for each variable quantity to get graph and discretized value
-reynolds = []
-specificVolume = []
-specificEnthalpy = []
-viscosity = []
-pressure = []
-velocity = []
-o = []
-n = []
-
-
-def EqRoots(a, b, c):
-
-    dis = b*b-4*a*c
+# -------------------------- Helper Function --------------------------
+def solve_quadratic_root(a, b, c):
+    dis = b**2 - 4*a*c
+    if dis < 0:
+        return 0
     sqrt_val = np.sqrt(dis)
+    r1 = (-b + sqrt_val) / (2*a)
+    r2 = (-b - sqrt_val) / (2*a)
+    if r1 > 0:
+        return r1
+    elif r2 > 0:
+        return r2
+    else:
+        return 0
 
-    # checking condition for discriminant
-    if dis > 0:
+# -------------------------- Load R410 Data --------------------------
+csv_filename = "R410.csv"
 
-        r1 = (-b + sqrt_val)/(2 * a)
-        r2 = (-b - sqrt_val)/(2 * a)
-        if r1 > 0:
-            return r1
-        if r2 > 0:
-            return r2
-        else:
-            return 0
+if not os.path.exists(csv_filename):
+    print(f"'{csv_filename}' not found. Creating sample dataset...")
+    sample_data = {
+        "Temp": list(range(10, 51)),
+        "p_vap (MPa)": np.linspace(0.5, 2.6, 41),
+        "hf": np.linspace(100, 300, 41),
+        "hg (kJ/kg)": np.linspace(400, 600, 41),
+        "vf (m3/kg)": np.linspace(0.0008, 0.0012, 41),
+        "vg (m3/kg)": np.linspace(0.02, 0.04, 41),
+        "muf (Pa-s)": np.linspace(1.2e-5, 1.8e-5, 41),
+        "mug (Pa-s)": np.linspace(9e-6, 1.1e-5, 41)
+    }
+    df = pd.DataFrame(sample_data)
+    df.to_csv(csv_filename, index=False)
+else:
+    df = pd.read_csv(csv_filename)
 
-    elif dis == 0:
+df["Temp"] = df["Temp"].astype(int)
 
-        return (-b / (2 * a))
+try:
+    row_init = df[df["Temp"] == Tc].iloc[0]
+except IndexError:
+    raise ValueError(f"Temperature {Tc}°C not found in {csv_filename}. Check your data.")
 
+p1 = row_init["p_vap (MPa)"] * 1e6
+h1 = row_init["hf"] * 1e3
+v1 = row_init["vf (m3/kg)"]
+u1 = row_init["muf (Pa-s)"]
 
-df = pd.read_csv("R410A.csv")  # File for R410A location should be in same folder 
-df.set_index('Temp')
+V1 = G * v1
+Re1 = (V1 * D) / (u1 * v1)
+f1 = 0.25 / (math.log((math.e / (3.7 * D)) + (5.74 / Re1**0.9)))**2
 
-prop = df.loc[df["Temp"] == Tc]
-arr = prop.values.tolist()
+# -------------------------- Main Calculation Loop --------------------------
+length = 0
+for T in range(Tc, Te - 1, -1):
+    row = df[df["Temp"] == T]
+    if row.empty:
+        continue
+    row = row.iloc[0]
 
-p1 = 1e6*arr[0][1]
-h1 = 1e3*arr[0][5]
-v1 = arr[0][3]
-u1 = arr[0][11]
-Cpl = 1e3*arr[0][9]
+    p2 = row["p_vap (MPa)"] * 1e6
+    hf2 = row["hf"] * 1e3
+    hg2 = row["hg (kJ/kg)"] * 1e3
+    vf2 = row["vf (m3/kg)"]
+    vg2 = row["vg (m3/kg)"]
+    uf2 = row["muf (Pa-s)"]
+    ug2 = row["mug (Pa-s)"]
 
-V1 = G*v1
-Re1 = (V1*D/(u1*v1))
-f1 = 0.25*(math.log((math.e / (3.7*D))+(5.74/(Re1 ** 0.9)))) ** (-2)
+    a = 0.5 * (vg2 - vf2)**2 * G**2
+    b = (hg2 - hf2) + vf2 * (vg2 - vf2) * G**2
+    c = (hf2 - h1) + 0.5 * (vf2**2 * G**2) - (V1**2 / 2)
 
-for i in range(Tc, Te-1, -1):
-    o.append(i)
+    x2 = solve_quadratic_root(a, b, c)
+    v2 = vf2 * (1 - x2) + vg2 * x2
+    h2 = hf2 * (1 - x2) + hg2 * x2
+    u2 = uf2 * (1 - x2) + ug2 * x2
+    V2 = G * v2
 
+    Re2 = (V2 * D) / (u2 * v2)
+    f2 = 0.25 / (math.log((math.e / (3.7 * D)) + (5.74 / Re2**0.9)))**2
 
-for j in range(len(o)):
-    prop2 = df.loc[df["Temp"] == o[j]]
-    arr2 = prop2.values.tolist()
-    p2 = 1e6*arr2[0][1]
-    hf2 = 1e3*arr2[0][5]
-    hg2 = 1e3*arr2[0][6]
-    vf2 = arr2[0][3]
-    vg2 = arr2[0][4]
-    uf2 = arr2[0][11]
-    ug2 = arr2[0][12]
+    Vm = 0.5 * (V1 + V2)
+    fm = 0.5 * (f1 + f2)
 
-    a = 0.5*(vg2-vf2) * (vg2-vf2)*G * G
-    b = (hg2-hf2)+(vf2*(vg2-vf2))*G * G
-    c = (hf2-h1)+0.5*(vf2 * vf2*G * G)-(V1 * V1/2)
+    dL = (2 * D * ((p1 - p2) - G * (V2 - V1))) / (fm * Vm * G)
+    length += dL
 
-    x2 = EqRoots(a, b, c)
-
-    # print(f"x2 is {x2}")
-
-    v2 = vf2*(1-x2) + vg2*x2
-    h2 = hf2*(1-x2) + hg2*x2
-    u2 = uf2*(1-x2) + ug2*x2
-    V2 = G*v2
-
-    Re2 = (V2*D/(u2*v2))
-    f2 = 0.25*(math.log((math.e / (3.7*D))+(5.74/(Re2 ** 0.9)))) ** (-2)
-
-    Vm = (V1+V2)*0.5
-    fm = (f1+f2)*0.5
-
-    # print("Vm", Vm, "\n", "fm", fm,)
-
-    L12 = ((2)*D*((p1-p2)-G*(V2-V1))/(fm*Vm*G))
-    n.append(L12)
+    tube_lengths.append(length)
     velocity.append(Vm)
     pressure.append(p2)
     reynolds.append(Re2)
-    specificVolume.append(v2)
-    specificEnthalpy.append(h2)
+    specific_volume.append(v2)
+    specific_enthalpy.append(h2)
     viscosity.append(u2)
+    temps.append(T)
 
+# -------------------------- Final Output --------------------------
+if tube_lengths:
+    print(f"\nEstimated Capillary Tube Length: {tube_lengths[-1]:.4f} m\n")
+else:
+    print("\nNo valid temperature data found. Ensure R410.csv contains required temperatures.\n")
 
-# print(o[j])
+# -------------------------- Plotting --------------------------
+def plot_graph(x, y, xlabel, ylabel, title):
+    plt.figure()
+    plt.plot(x, y, marker='o')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
-print(" Lenght of Capillary Tube in meter is ", L12)
-
-# print(n)
-
-plt.plot(n, o)
-plt.xlabel('Capillary tube length (m)')
-plt.ylabel('temperature (deg C)')
-plt.title('temperature vs Capillary tube length')
-plt.show()
-
-plt.plot(n, velocity)
-plt.xlabel('Capillary tube length (m)')
-plt.ylabel('velocity (m/s)')
-plt.title('Velocity vs Capillary tube length')
-plt.show()
-
-plt.plot(n, pressure)
-plt.xlabel('Capillary tube length (m)')
-plt.ylabel('pressure')
-plt.title(' pressure vs Capillary tube length')
-plt.show()
-
-plt.plot(n, reynolds)
-plt.xlabel('Capillary tube length (m)')
-plt.ylabel('Reynolds number')
-plt.title('Reynolds number vs Capillary tube length')
-plt.show()
-
-plt.plot(n, specificVolume)
-plt.xlabel('Capillary tube length (m)')
-plt.ylabel('specific volume')
-plt.title('specific volume vs Capillary tube length')
-plt.show()
-
-plt.plot(n, specificEnthalpy)
-plt.xlabel('Capillary tube length (m)')
-plt.ylabel(' specific enthalpy')
-plt.title('specific enthalpy vs Capillary tube length')
-plt.show()
-
-plt.plot(n, viscosity)
-plt.xlabel('Capillary tube length (m)')
-plt.ylabel('dynamic viscosity in (Pa.s)')
-plt.title('Dynamic viscosity vs Capillary tube length')
-plt.show()
+if tube_lengths:
+    plot_graph(temps, tube_lengths, 'Temperature (°C)', 'Capillary tube length (m)', 'Capillary Tube Length vs Temperature')
+    plot_graph(tube_lengths, velocity, 'Capillary tube length (m)', 'Velocity (m/s)', 'Velocity vs Capillary Tube Length')
+    plot_graph(tube_lengths, pressure, 'Capillary tube length (m)', 'Pressure (Pa)', 'Pressure vs Capillary Tube Length')
+    plot_graph(tube_lengths, reynolds, 'Capillary tube length (m)', 'Reynolds Number', 'Reynolds Number vs Capillary Tube Length')
+    plot_graph(tube_lengths, specific_volume, 'Capillary tube length (m)', 'Specific Volume (m3/kg)', 'Specific Volume vs Capillary Tube Length')
+    plot_graph(tube_lengths, specific_enthalpy, 'Capillary tube length (m)', 'Specific Enthalpy (J/kg)', 'Specific Enthalpy vs Capillary Tube Length')
+    plot_graph(tube_lengths, viscosity, 'Capillary tube length (m)', 'Dynamic Viscosity (Pa.s)', 'Dynamic Viscosity vs Capillary Tube Length')
